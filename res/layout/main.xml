@@ -8,34 +8,55 @@ android:layout_height="fill_parent"
 	<RelativeLayout
 	android:id="@+id/header_layout"
 	android:layout_width="match_parent" 
-	android:layout_height="50dp" 
+	android:layout_height="50dp"
+	android:background="@drawable/header_gradient_base"
 	>
 	
-		<TextView
-		android:id="@+id/header_title"
-		android:layout_width="match_parent" 
+		<ImageView
+		android:id="@+id/header_icon"
+		android:layout_width="wrap_content" 
 		android:layout_height="match_parent" 
 		android:layout_centerVertical="true"
-		android:background="@drawable/header_gradient"
-		android:text="WiFi Radio"
-		android:textSize="25sp"
-		android:paddingLeft="10dp"
-		android:textColor="#FFDDDDDD"
+		android:layout_alignParentLeft="true"
+		android:paddingRight="5dp"
+		android:paddingLeft="5dp"
+		android:gravity="center_vertical"
+		android:background="#00000000"
+		android:src="@drawable/icon"
+		android:scaleType="fitCenter"
 		/>
-		
+	
 		<TextView
 		android:id="@+id/header_add_item"
-		android:layout_width="match_parent" 
+		android:layout_width="wrap_content" 
 		android:layout_height="match_parent" 
 		android:layout_centerVertical="true"
 		android:layout_alignParentRight="true"
 		android:paddingRight="15dp"
 		android:paddingLeft="15dp"
-		android:background="@drawable/header_gradient"
-		android:text="Add"
+		android:gravity="center_vertical"
+		android:background="@drawable/header_gradient_base"
+		android:text=" + "
 		android:textSize="25sp"
+		android:textColor="#FF1AE000"
+		android:clickable="true"
+		/>
+		
+		<TextView
+		android:id="@+id/header_title"
+		android:layout_width="wrap_content" 
+		android:layout_height="match_parent" 
+		android:layout_centerVertical="true"
+		android:layout_toRightOf="@id/header_icon"
+		android:layout_toLeftOf="@id/header_add_item"
+		android:gravity="center_vertical"
+		android:background="@drawable/header_gradient_base"
+		android:text="WiFi Radio"
+		android:textSize="20sp"
+		android:paddingLeft="10dp"
 		android:textColor="#FFDDDDDD"
 		/>
+		
 	
 	</RelativeLayout>
 	
@@ -44,9 +65,11 @@ android:layout_height="fill_parent"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent" 
 	android:layout_below="@id/header_layout"
-	android:background="#FF582781"
+	android:layout_alignParentBottom="true"
+	android:background="#FF153045"
 	android:cacheColorHint="#00000000"
-	android:divider="#FF000000"
+	android:divider="#FFCCCCCC"
 	/>
+	
 	
 </RelativeLayout>
