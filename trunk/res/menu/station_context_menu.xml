@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:title="Edit Station" android:id="@+id/edit_station_context_menu_item"></item>
+    <item android:title="Delete Station" android:id="@+id/delete_station_context_menu_item"></item>
+    
+</menu>

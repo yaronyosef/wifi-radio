@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+android:orientation="vertical"
+android:layout_width="match_parent"
+android:layout_height="wrap_content">
+
+	<EditText
+    android:id="@+id/name_edit"
+    android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    android:hint="Name"
+    android:inputType="text"
+    android:singleLine="true"/>
+
+    <EditText
+    android:id="@+id/station_edit"
+    android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    android:layout_below="@+id/name_edit"
+    android:hint="Station"
+    android:inputType="number"
+    android:singleLine="true"/>
+    
+    <EditText
+    android:id="@+id/port_edit"
+    android:layout_height="wrap_content" 
+    android:layout_width="match_parent"
+    android:layout_below="@+id/station_edit"
+    android:hint="Port"
+    android:inputType="number"
+    android:singleLine="true"/>
+    
+</RelativeLayout>
