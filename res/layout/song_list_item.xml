@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+android:orientation="vertical"
+android:layout_width="match_parent"
+android:layout_height="match_parent">
+
+	<TextView
+	android:id="@+id/song_list_item_title"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	android:text="Temporary Title"
+	android:textSize="25dp"
+	/>
+	
+	<View 
+	android:id="@+id/song_list_item_divider"
+	android:layout_width="0dp"
+	android:layout_height="0dp"
+	android:layout_centerHorizontal="true"
+	android:layout_below="@id/song_list_item_title"
+	/>
+
+	<TextView
+	android:id="@+id/song_list_item_artist"
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:layout_alignParentLeft="true"
+	android:layout_toLeftOf="@id/song_list_item_divider"
+	android:layout_below="@id/song_list_item_title"
+	android:text="Artist:"
+	android:textSize="18dp"
+	/>
+
+	<TextView
+	android:id="@+id/song_list_item_user"
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:layout_alignParentRight="true"
+	android:layout_toRightOf="@id/song_list_item_divider"
+	android:layout_below="@id/song_list_item_title"
+	android:text="User:"
+	android:textSize="18dp"
+	/>
+
+</RelativeLayout>

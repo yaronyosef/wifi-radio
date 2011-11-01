@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -21,6 +22,7 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -49,8 +51,10 @@ public class WiFiRadioActivity extends Activity {
         list = (ListView) findViewById(R.id.radio_connection_list);
         listAdapter = new StationAdapter(this, R.layout.radio_list_item, new ArrayList<String>());
         list.setAdapter(listAdapter);
+        
         stationLongClickListener = new StationLongClickListener();
         list.setOnItemLongClickListener(stationLongClickListener);
+        list.setOnItemClickListener(stationClickListener);
         registerForContextMenu(list);
         
         TextView addButton = (TextView) findViewById(R.id.header_add_item);
@@ -108,7 +112,20 @@ public class WiFiRadioActivity extends Activity {
 			return false;
 		}
 	}
-	
+    
+    OnItemClickListener stationClickListener = new AdapterView.OnItemClickListener()
+    {
+		@Override
+		public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
+		{
+			Intent stationIntent = new Intent(WiFiRadioActivity.this, WiFiStation.class);
+			stationIntent.putExtra("name", listAdapter.names.get((int) arg3));
+			stationIntent.putExtra("station", listAdapter.stations.get((int) arg3));
+			stationIntent.putExtra("port", listAdapter.ports.get((int) arg3));
+			startActivity(stationIntent);
+		}
+	};
+    
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo)
 	{
@@ -269,6 +286,4 @@ public class WiFiRadioActivity extends Activity {
 		}
 	}
 	
-    
-    
 }
