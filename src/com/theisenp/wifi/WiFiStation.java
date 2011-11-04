@@ -83,12 +83,11 @@ public class WiFiStation extends Activity
 		portField.setText(String.valueOf(stationPort));
 	}
 	
-	OnItemClickListener songClickListener = new OnItemClickListener()
+	AdapterView.OnItemClickListener songClickListener = new OnItemClickListener()
 	{
-		@Override
-		public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
+		public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) 
 		{
-			queueTrack();
+			
 		}
 	};
 	
