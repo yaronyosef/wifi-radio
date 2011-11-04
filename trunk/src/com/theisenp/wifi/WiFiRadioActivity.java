@@ -18,12 +18,9 @@ import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -101,21 +98,21 @@ public class WiFiRadioActivity extends Activity {
     	}
     }
     
-    class StationLongClickListener implements OnItemLongClickListener
+    class StationLongClickListener implements AdapterView.OnItemLongClickListener
     {
-    	public long position;
+    	private int position;
     	
-		@Override
 		public boolean onItemLongClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
 		{
-			position = arg3;
+			position = (int) arg3;
 			return false;
 		}
-	}
+    	
+    }
     
-    OnItemClickListener stationClickListener = new AdapterView.OnItemClickListener()
+    AdapterView.OnItemClickListener stationClickListener = new AdapterView.OnItemClickListener()
     {
-		@Override
+
 		public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
 		{
 			Intent stationIntent = new Intent(WiFiRadioActivity.this, WiFiStation.class);
@@ -166,10 +163,10 @@ public class WiFiRadioActivity extends Activity {
 			stationEdit = (EditText) view.findViewById(R.id.station_edit);
 			portEdit = (EditText) view.findViewById(R.id.port_edit);
 			setView(view);
-			AlertDialog.OnClickListener listener = new AlertDialog.OnClickListener()
+			DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener()
 			{
-				@Override
-				public void onClick(DialogInterface dialogInterface, int which)
+				
+				public void onClick(DialogInterface dialog, int which)
 				{
 					Log.d(TAG, "Added New Station");
 					String addName = getName();
@@ -227,7 +224,7 @@ public class WiFiRadioActivity extends Activity {
     
     View.OnClickListener addStationListener = new View.OnClickListener()
     {
-		@Override
+		
 		public void onClick(View v)
 		{
 			final AddStationDialogBuilder dialog = new AddStationDialogBuilder(WiFiRadioActivity.this, listAdapter);
