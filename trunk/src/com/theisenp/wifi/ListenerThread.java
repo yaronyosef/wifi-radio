@@ -38,7 +38,7 @@ public class ListenerThread extends AsyncTask<Integer, String[], Void>
 		messageQueue = new ArrayList<byte[]>();
 		try
 		{
-			String addressString = "141.212.59.40";// + addressEnd;
+			String addressString = "141.212.202.199";// + addressEnd;
 			address = InetAddress.getByName(addressString);
 			socket = new DatagramSocket(5000, address);
 		}

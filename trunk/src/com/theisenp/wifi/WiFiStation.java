@@ -265,7 +265,7 @@ public class WiFiStation extends Activity
 			messageQueue = new ArrayList<byte[]>();
 			try
 			{
-				String addressString = "141.212.59.40";// + addressEnd;
+				String addressString = "127.0.0.1";// + addressEnd;
 				address = InetAddress.getByName(addressString);
 				socket = new DatagramSocket(5000, address);
 			}
