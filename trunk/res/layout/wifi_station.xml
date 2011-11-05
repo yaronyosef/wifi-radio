@@ -79,22 +79,11 @@ android:layout_height="match_parent">
 		/>
 		
 		<TextView
-		android:id="@+id/station_port"
+		android:id="@+id/ip_address"
 		android:layout_width="wrap_content" 
 		android:layout_height="wrap_content" 
 		android:layout_alignParentRight="true"
-		android:text="Port: 456"
-		android:textSize="15sp"
-		android:paddingRight="10dp"
-		android:textColor="#FFDDDDDD"
-		/>
-		
-		<TextView
-		android:id="@+id/station_number"
-		android:layout_width="wrap_content" 
-		android:layout_height="wrap_content" 
-		android:layout_toLeftOf="@id/station_port"
-		android:text="Station: 123"
+		android:text="IP Address: 456"
 		android:textSize="15sp"
 		android:paddingRight="10dp"
 		android:textColor="#FFDDDDDD"
