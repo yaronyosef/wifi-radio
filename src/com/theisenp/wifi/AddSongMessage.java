@@ -14,6 +14,11 @@ public class AddSongMessage extends WiFiMessage
 		artist = songArtist;
 	}
 	
+	/**
+	 * Returns the raw bytes for this message so that it can be sent over the sockets
+	 * (non-Javadoc)
+	 * @see com.theisenp.wifi.WiFiMessage#getMessage()
+	 */
 	@Override
 	public byte[] getMessage()
 	{
@@ -31,6 +36,9 @@ public class AddSongMessage extends WiFiMessage
 		return message;
 	}
 	
+	/**
+	 * Finds the bytes in the message that correspond to the artist and return them as a String
+	 */
 	public static String readArtist(byte[] message)
 	{
 		byte[] artistBytes = new byte[20];
@@ -38,6 +46,9 @@ public class AddSongMessage extends WiFiMessage
 		return new String(artistBytes);
 	}
 	
+	/**
+	 * Finds the bytes in the message that correspond to the track name and return them as a String
+	 */
 	public static String readName(byte[] message)
 	{
 		byte[] nameBytes = new byte[20];
@@ -45,6 +56,9 @@ public class AddSongMessage extends WiFiMessage
 		return new String(nameBytes);
 	}
 	
+	/**
+	 * Finds the bytes in the message that correspond to the songID and return them as an int
+	 */
 	public static int readSongID(byte[] message)
 	{
 		byte[] idBytes = new byte[4];

@@ -15,6 +15,12 @@ public class AudioMessage extends WiFiMessage
 		dataLength = messageDataLength;
 	}
 	
+	
+	/**
+	 * Returns the raw bytes for this message so that it can be sent over the sockets
+	 * (non-Javadoc)
+	 * @see com.theisenp.wifi.WiFiMessage#getMessage()
+	 */
 	@Override
 	public byte[] getMessage()
 	{
