@@ -1,23 +1,31 @@
 package com.theisenp.wifi;
 
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.http.client.utils.URIUtils;
-import org.apache.http.client.utils.URLEncodedUtils;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.media.MediaPlayer;
-import android.net.Uri;
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioTrack;
+import android.net.wifi.WifiManager;
+import android.net.wifi.WifiManager.MulticastLock;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.URLUtil;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
@@ -30,8 +38,9 @@ public class WiFiStation extends Activity
 	private static final String TAG = "WiFiStation";
 	String stationName;
 	int stationAddress, stationPort;
+	ListenerTask listener;
+	BroadcastTask broadcast;
 	
-	MediaPlayer player;
 	private SongListAdapter playQueueAdapter;
 	
 	@Override
@@ -40,6 +49,13 @@ public class WiFiStation extends Activity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.wifi_station);
 		
+		WifiManager wifi = (WifiManager)getSystemService( Context.WIFI_SERVICE );
+		if(wifi != null)
+		{
+			MulticastLock mcLock = wifi.createMulticastLock("mylock");
+			mcLock.acquire();
+		}
+		//in case multicast doesn't work, do something here	
 		initializeStationInfo();
 		
 		playQueueAdapter = new SongListAdapter(this, R.layout.song_list_item, new ArrayList<String>());
@@ -47,21 +63,19 @@ public class WiFiStation extends Activity
 		playQueue.setAdapter(playQueueAdapter);
 		
 		playQueue.setOnItemClickListener(songClickListener);
-		player = new MediaPlayer();
-		//player.setDataSource(this, URIUtils.createURI("http", "230.0.0." + stationAddress, stationPort, null, null, null));
-		try
-		{
-			player.setDataSource("http://230.0.0.16");
-		}
-		catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		}
-		catch (IllegalStateException e) {
-			e.printStackTrace();
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}
+		
+		
+		listener = new ListenerTask();
+		listener.execute(stationAddress);
+		broadcast = new BroadcastTask();
+		broadcast.start();
+	}
+	
+	@Override
+	protected void onStop()
+	{
+		super.onStop();
+		listener.cancel(true);
 	}
 	
 	/**
@@ -91,19 +105,6 @@ public class WiFiStation extends Activity
 		}
 	};
 	
-	public void playPause(View v)
-	{
-		if(player.isPlaying())
-		{
-			player.pause();
-		}
-		else
-		{
-			player.start();
-		}
-	}
-	
-	
 	/**
 	 * Opens a dialog so that the user can choose a song to add to the play queue
 	 * @param v
@@ -119,11 +120,43 @@ public class WiFiStation extends Activity
 		playQueueAdapter.add("Dreams Don't Turn To Dust", "Owl City", "Theisen");
 	}
 	
+	public void addSong(String track, String artist, String user)
+	{
+		playQueueAdapter.add(track, artist, user);
+	}
+	
+	public void sendAudioMessage(View v)
+	{
+		InputStream is = getResources().openRawResource(R.raw.partyrock);
+		BufferedInputStream bis = new BufferedInputStream(is, 8000);
+	    DataInputStream dis = new DataInputStream(bis);
+		
+		int BUFFER_SIZE = 50000;
+		byte[][] buffer = new byte[32][BUFFER_SIZE];
+		int i = 0;
+		try
+		{
+			while(dis.available() > 0)
+			{
+				dis.read(buffer[i % 32], 0, BUFFER_SIZE);
+				broadcast.addToQueue(buffer[i % 32]);
+				i++;
+			}
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	public void sendAddSongMessage(View v)
+	{
+		AddSongMessage message = new AddSongMessage("Theisen", 123456, "Hello Seattle", "Owl City");
+		broadcast.addToQueue(message.getMessage());
+	}
 	private void queueTrack()
 	{
 		//player = MediaPlayer.create(WiFiStation.this, R.raw.dreams);
-		playPause(null);
-		
 		
 		//player.start();
 		/*
@@ -210,6 +243,120 @@ public class WiFiStation extends Activity
 			stationView.setText(artists.get(position));
 			portView.setText("User: " + users.get(position));
 			return layout;
+		}
+	}
+	
+	public class ListenerTask extends AsyncTask<Integer, String, Void>
+	{
+		private static final String TAG = "ListenerThread";
+
+		private InetAddress address;
+		private DatagramSocket socket;
+		List<byte[]> messageQueue;
+
+		@Override
+		protected Void doInBackground(Integer... addressEnd)
+		{
+			Log.d(TAG, "Running");
+			
+			/*
+			 * Grabs the application's context and builds an IP address from the provided address
+			 */
+			messageQueue = new ArrayList<byte[]>();
+			try
+			{
+				String addressString = "141.212.59.40";// + addressEnd;
+				address = InetAddress.getByName(addressString);
+				socket = new DatagramSocket(5000, address);
+			}
+			catch (UnknownHostException e)
+			{
+				e.printStackTrace();
+			}
+			catch (SocketException e)
+			{
+				e.printStackTrace();
+			}
+			Log.d(TAG, "Listener started");		
+			
+
+			//TODO: Needs a more robustly defined packet size
+			byte[] data = new byte[50000];
+			DatagramPacket packet = new DatagramPacket(data, data.length);
+
+			/*
+			 * Until interrupted by the user, listens for new data at the specified address
+			 * Logs and toasts the data as text whenever a packet is received
+			 */
+			int  intSize = android.media.AudioTrack.getMinBufferSize(44100, AudioFormat.CHANNEL_CONFIGURATION_STEREO,
+					AudioFormat.ENCODING_PCM_16BIT);
+
+			AudioTrack oTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 44100,
+					AudioFormat.CHANNEL_CONFIGURATION_STEREO,
+					AudioFormat.ENCODING_PCM_16BIT, intSize,
+					AudioTrack.MODE_STREAM);
+
+			oTrack.play();
+			while(!isCancelled())
+			{
+				Log.d(TAG, "Waiting for packet");
+				try
+				{
+					Log.d(TAG, "Writing data to track");
+					socket.receive(packet);
+					if(!handleMessage(data))
+					{
+						oTrack.write(data, 0, data.length);
+					}
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
+			}
+			oTrack.stop();
+			oTrack.release();
+			socket.close();
+			messageQueue.clear();
+			return null;
+		}
+		
+		@Override
+		protected void onProgressUpdate(String... values)
+		{
+			super.onProgressUpdate(values);
+			addSong(values[0], values[1], values[2]);
+		}
+		
+		private boolean handleMessage(byte[] messageData)
+		{
+			byte[] tag = new byte[4];
+			System.arraycopy(messageData, 0, tag, 0, 4);
+			if(WiFiMessage.byteArrayToInt(tag) != 0xB007B007)
+			{
+				Log.e(TAG, "Incorrect tag");
+				return false;
+			}
+			byte type = messageData[4];
+			if(type == 0)
+			{
+				String artist = AddSongMessage.readArtist(messageData);
+				String name = AddSongMessage.readName(messageData);
+				String user = WiFiMessage.readUser(messageData);
+				
+				String values[] = {name, artist, user};
+				
+				publishProgress(values);
+				return true;
+			}
+			else if(type == 1)
+			{
+				return false;
+			}
+			else
+			{
+				return false;
+			}
 		}
 	}
 }
