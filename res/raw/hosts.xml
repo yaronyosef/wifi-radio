@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+
 <hosts>
 	<host name = "localhost">
 		<IP>127.0.0.1</IP>
@@ -7,4 +7,3 @@
 	</host>
     
 </hosts>
-</resources>
