@@ -1,16 +1,19 @@
 package com.theisenp.wifi;
 
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.net.SocketException;
 import java.util.LinkedList;
 
 import android.util.Log;
 
 /**
- * Class to manage the broadcast of UDP packets
+ * Class to manage the broadcast of TCP data
  * @author Patrick Theisen
  *
  */
@@ -18,33 +21,39 @@ public class BroadcastThread extends Thread
 {
 
 	private final static String TAG = "BroadcastTask";
-	private LinkedList<DatagramPacket> packetQueue;
-	InetAddress address;
+	private LinkedList<WiFiMessage> messageQueue;
+	private InetAddress address;
+	private DataInputStream incoming;
+	private DataOutputStream outgoing;
+	private Socket socket;
+	private String addressString;
+	
+	public BroadcastThread(String ipAddress)
+	{
+		addressString = ipAddress;
+	}
 	
 	@Override
 	public void run()
 	{
 		super.run();
 		/*
-		 * TODO: Find the IP address programmatically instead of hardcoding it.
-		 */
-		String addressString = "141.212.59.40";
-		/*
 		 * Initializes the queue of messages to be sent
 		 * If the messages are sent immediately it floods the network, and many of them are dropped
 		 */
-		packetQueue = new LinkedList<DatagramPacket>();
+		messageQueue = new LinkedList<WiFiMessage>();
 		
-		DatagramSocket socket = null;
+		socket = null;
 		try
 		{
 			/*
-			 * Creates a new Datagram Socket and resolves the destination address
-			 * for the packets.
+			 * Creates a new Socket and resolves the destination address
+			 * for the messages.
 			 */
-			address = InetAddress.getByName(addressString);
-			Log.d(TAG, address.toString());
-			socket = new DatagramSocket();
+			socket = new Socket(addressString, 5000);
+			incoming = new DataInputStream(socket.getInputStream());
+			outgoing = new DataOutputStream(socket.getOutputStream());
+			
 		}
 		catch (SocketException e)
 		{
@@ -62,16 +71,22 @@ public class BroadcastThread extends Thread
 			/*
 			 * Get the first packet from the queue if it exists
 			 */
-			DatagramPacket packet = packetQueue.poll();
+			WiFiMessage message = messageQueue.poll();
 			/*
 			 * If a packet was successfully grabbed from the queue, send it via socket
 			 */
-			if(packet != null)
+			if(message != null)
 			{
 				try
 				{
-					Log.d(TAG, "Sending Message.  Left in queue: " + packetQueue.size());
-					socket.send(packet);
+					Log.d(TAG, "Sending Message.  Left in queue: " + messageQueue.size());
+					if(outgoing == null)
+					{
+						Log.d(TAG, "outgoing is null");
+					}
+					outgoing.write(message.getMessage());
+					//TODO: Write null terminators??
+					//outgoing.write(...)
 				}
 				catch (IOException e)
 				{
@@ -91,19 +106,27 @@ public class BroadcastThread extends Thread
 			}
 		}
 		
-		socket.close();
+		try
+		{
+			incoming.close();
+			outgoing.close();
+			socket.close();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
 	}
 	
 	/*
 	 * Adds another message to the queue.
 	 */
-	public void addToQueue(byte[] data)
+	public void addToQueue(WiFiMessage message)
 	{
 		/*
-		 * Builds a new DatagramPacket from the byte data
+		 * Adds a new message to the queue to be sent via TCP
 		 */
-		DatagramPacket packet = new DatagramPacket(data, data.length, address, 5000);
-		packetQueue.add(packet);
+		messageQueue.add(message);
 	}
 
 }

@@ -6,7 +6,7 @@ android:layout_width="match_parent"
 android:layout_height="wrap_content">
 
 	<EditText
-    android:id="@+id/name_edit"
+    android:id="@+id/station_name_edit"
     android:layout_height="wrap_content"
     android:layout_width="match_parent"
     android:hint="Name"
@@ -14,21 +14,12 @@ android:layout_height="wrap_content">
     android:singleLine="true"/>
 
     <EditText
-    android:id="@+id/station_edit"
+    android:id="@+id/ip_address_edit"
     android:layout_height="wrap_content"
     android:layout_width="match_parent"
-    android:layout_below="@+id/name_edit"
-    android:hint="Station"
-    android:inputType="number"
-    android:singleLine="true"/>
-    
-    <EditText
-    android:id="@+id/port_edit"
-    android:layout_height="wrap_content" 
-    android:layout_width="match_parent"
-    android:layout_below="@+id/station_edit"
-    android:hint="Port"
-    android:inputType="number"
+    android:layout_below="@id/station_name_edit"
+    android:hint="IP Address"
+    android:inputType="text"
     android:singleLine="true"/>
     
 </RelativeLayout>

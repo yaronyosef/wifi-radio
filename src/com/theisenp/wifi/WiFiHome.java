@@ -69,13 +69,11 @@ public class WiFiHome extends Activity {
     	for(int i = 0; i < size; i++)
     	{
     		edit.putString(PREFERENCES_PREFIX + "_name_" + i, listAdapter.names.get(i));
-    		edit.putString(PREFERENCES_PREFIX + "_station_" + i, listAdapter.stations.get(i));
-    		edit.putString(PREFERENCES_PREFIX + "_port_" + i, listAdapter.ports.get(i));
+    		edit.putString(PREFERENCES_PREFIX + "_ipAddress_" + i, listAdapter.ipAddresses.get(i));
     	}
     	edit.commit();
     	listAdapter.names.clear();
-    	listAdapter.stations.clear();
-    	listAdapter.ports.clear();
+    	listAdapter.ipAddresses.clear();
     	listAdapter.clear();
     }
     
@@ -84,16 +82,15 @@ public class WiFiHome extends Activity {
     {
     	super.onResume();
     	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-    	String name, station, port;
+    	String name, ipAddress;
     	int size = prefs.getInt("number_of_stations", 0);
     	for(int i = 0; prefs.contains(PREFERENCES_PREFIX + "_name_" + i) && i < size; i++)
     	{
     		name = prefs.getString(PREFERENCES_PREFIX + "_name_" + i, null);
-    		station = prefs.getString(PREFERENCES_PREFIX + "_station_" + i, null);
-    		port = prefs.getString(PREFERENCES_PREFIX + "_port_" + i, null);
-    		if(name != null && station != null && port != null)
+    		ipAddress = prefs.getString(PREFERENCES_PREFIX + "_ipAddress_" + i, null);
+    		if(name != null && ipAddress != null)
     		{
-    			listAdapter.add(name, station, port);
+    			listAdapter.add(name, ipAddress);
     		}
     	}
     }
@@ -117,8 +114,7 @@ public class WiFiHome extends Activity {
 		{
 			Intent stationIntent = new Intent(WiFiHome.this, WiFiStation.class);
 			stationIntent.putExtra("name", listAdapter.names.get((int) arg3));
-			stationIntent.putExtra("station", listAdapter.stations.get((int) arg3));
-			stationIntent.putExtra("port", listAdapter.ports.get((int) arg3));
+			stationIntent.putExtra("ipAddress", listAdapter.ipAddresses.get((int) arg3));
 			startActivity(stationIntent);
 		}
 	};
@@ -150,8 +146,7 @@ public class WiFiHome extends Activity {
     private class AddStationDialogBuilder extends AlertDialog.Builder
     {
     	private EditText nameEdit;
-    	private EditText stationEdit;
-    	private EditText portEdit;
+    	private EditText ipAddressEdit;
     	
 		protected AddStationDialogBuilder(Context context, final StationAdapter listItems)
 		{
@@ -159,9 +154,8 @@ public class WiFiHome extends Activity {
 			LayoutInflater inflater = getLayoutInflater();
 			setTitle("Add New Station");
 			View view = inflater.inflate(R.layout.add_new_station, null);
-			nameEdit = (EditText) view.findViewById(R.id.name_edit);
-			stationEdit = (EditText) view.findViewById(R.id.station_edit);
-			portEdit = (EditText) view.findViewById(R.id.port_edit);
+			nameEdit = (EditText) view.findViewById(R.id.station_name_edit);
+			ipAddressEdit = (EditText) view.findViewById(R.id.ip_address_edit);
 			setView(view);
 			DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener()
 			{
@@ -170,23 +164,18 @@ public class WiFiHome extends Activity {
 				{
 					Log.d(TAG, "Added New Station");
 					String addName = getName();
-					String addStation = getStation();
-					String addPort = getPort();
+					String addIpAddress = getIpAddress();
 					if(addName == null)
 					{
 						Toast.makeText(WiFiHome.this, "Please add a name", Toast.LENGTH_SHORT).show();
 					}
-					else if(addStation == null)
+					else if(addIpAddress == null)
 					{
-						Toast.makeText(WiFiHome.this, "Please add a station", Toast.LENGTH_SHORT).show();
-					}
-					else if(addPort == null)
-					{
-						Toast.makeText(WiFiHome.this, "Please add a port", Toast.LENGTH_SHORT).show();
+						Toast.makeText(WiFiHome.this, "Please choose an IP Address", Toast.LENGTH_SHORT).show();
 					}
 					else
 					{
-						listItems.add(addName, addStation, addPort);
+						listItems.add(addName, addIpAddress);
 					}
 				}
 			};
@@ -203,20 +192,11 @@ public class WiFiHome extends Activity {
 			return null;
 		}
 		
-		private String getStation()
+		private String getIpAddress()
 		{
-			if(!stationEdit.getText().toString().equals(""))
+			if(!ipAddressEdit.getText().toString().equals(""))
 			{
-				return stationEdit.getText().toString();
-			}
-			return null;
-		}
-		
-		private String getPort()
-		{
-			if(!portEdit.getText().toString().equals(""))
-			{
-				return portEdit.getText().toString();
+				return ipAddressEdit.getText().toString();
 			}
 			return null;
 		}
@@ -234,21 +214,19 @@ public class WiFiHome extends Activity {
 	
 	private class StationAdapter extends ArrayAdapter<String>
 	{
-		ArrayList<String> names, stations, ports;
+		ArrayList<String> names, ipAddresses;
 		
 		public StationAdapter(Context context, int textViewResourceId, List<String> list)
 		{
 			super(context, textViewResourceId, list);
 			names = new ArrayList<String>();
-			stations = new ArrayList<String>();
-			ports = new ArrayList<String>();
+			ipAddresses = new ArrayList<String>();
 		}
 		
-		public void add(String name, String station, String port)
+		public void add(String name, String ipAddress)
 		{
 			names.add(name);
-			stations.add(station);
-			ports.add(port);
+			ipAddresses.add(ipAddress);
 			super.add(name);
 			notifyDataSetChanged();
 		}
@@ -257,8 +235,7 @@ public class WiFiHome extends Activity {
 		{
 			super.remove(names.get(index));
 			names.remove(index);
-			stations.remove(index);
-			ports.remove(index);
+			ipAddresses.remove(index);
 			notifyDataSetChanged();
 		}
 		
@@ -272,13 +249,11 @@ public class WiFiHome extends Activity {
                 layout = (RelativeLayout) vi.inflate(R.layout.radio_list_item, null);
             }
 			
-			TextView nameView = (TextView) layout.findViewById(R.id.radio_list_item_name);
-			TextView stationView = (TextView) layout.findViewById(R.id.radio_list_item_station);
-			TextView portView = (TextView) layout.findViewById(R.id.radio_list_item_port);
+			TextView nameView = (TextView) layout.findViewById(R.id.station_name);
+			TextView ipAddressView = (TextView) layout.findViewById(R.id.ip_address);
 			
 			nameView.setText((CharSequence) names.get(position));
-			stationView.setText("Station: " + stations.get(position));
-			portView.setText("Port: " + ports.get(position));
+			ipAddressView.setText("IP Address: " + ipAddresses.get(position));
 			return layout;
 		}
 	}

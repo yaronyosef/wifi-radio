@@ -1,5 +1,7 @@
 package com.theisenp.wifi;
 
+import com.theisenp.wifi.WiFiMessage.WifiMessageType;
+
 public class AddSongMessage extends WiFiMessage
 {
 	private int songID;
@@ -17,7 +19,7 @@ public class AddSongMessage extends WiFiMessage
 	/**
 	 * Returns the raw bytes for this message so that it can be sent over the sockets
 	 * (non-Javadoc)
-	 * @see com.theisenp.wifi.WiFiMessage#getMessage()
+	 * @see com.theisenp.wifi.WifiMessage#getMessage()
 	 */
 	@Override
 	public byte[] getMessage()

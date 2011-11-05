@@ -2,11 +2,12 @@ package com.theisenp.wifi;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -36,9 +37,8 @@ import android.widget.TextView;
 public class WiFiStation extends Activity
 {
 	private static final String TAG = "WiFiStation";
-	String stationName;
-	int stationAddress, stationPort;
-	ListenerTask listener;
+	String stationName, stationIpAddress;
+	ConnectionTask listener;
 	BroadcastThread broadcast;
 	
 	private SongListAdapter playQueueAdapter;
@@ -65,9 +65,9 @@ public class WiFiStation extends Activity
 		playQueue.setOnItemClickListener(songClickListener);
 		
 		
-		listener = new ListenerTask();
-		listener.execute(stationAddress);
-		broadcast = new BroadcastThread();
+		listener = new ConnectionTask();
+		listener.execute(stationIpAddress);
+		broadcast = new BroadcastThread(stationIpAddress);
 		broadcast.start();
 	}
 	
@@ -86,22 +86,19 @@ public class WiFiStation extends Activity
 	{
 		Intent stationIntent = getIntent();
 		stationName = stationIntent.getStringExtra("name");
-		stationAddress = Integer.parseInt(stationIntent.getStringExtra("station"));
-		stationPort = Integer.parseInt(stationIntent.getStringExtra("port"));
+		stationIpAddress = stationIntent.getStringExtra("ipAddress");
 		
 		TextView nameField = (TextView) findViewById(R.id.station_name);
-		TextView stationField = (TextView) findViewById(R.id.station_number);
-		TextView portField = (TextView) findViewById(R.id.station_port);
+		TextView stationField = (TextView) findViewById(R.id.ip_address);
 		nameField.setText(stationName);
-		stationField.setText(String.valueOf(stationAddress));
-		portField.setText(String.valueOf(stationPort));
+		stationField.setText(String.valueOf(stationIpAddress));
 	}
 	
 	AdapterView.OnItemClickListener songClickListener = new OnItemClickListener()
 	{
 		public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) 
 		{
-			
+			sendAudioMessage(null);
 		}
 	};
 	
@@ -139,7 +136,10 @@ public class WiFiStation extends Activity
 			while(dis.available() > 0)
 			{
 				dis.read(buffer[i % 32], 0, BUFFER_SIZE);
-				broadcast.addToQueue(buffer[i % 32]);
+				
+				//TODO: Get rid of hardcoded user and songId values
+				AudioMessage message = new AudioMessage("Theisen", 1000, i, buffer[i % 32]);
+				broadcast.addToQueue(message);
 				i++;
 			}
 		}
@@ -152,7 +152,7 @@ public class WiFiStation extends Activity
 	public void sendAddSongMessage(View v)
 	{
 		AddSongMessage message = new AddSongMessage("Theisen", 123456, "Hello Seattle", "Owl City");
-		broadcast.addToQueue(message.getMessage());
+		broadcast.addToQueue(message);
 	}
 	private void queueTrack()
 	{
@@ -246,16 +246,20 @@ public class WiFiStation extends Activity
 		}
 	}
 	
-	public class ListenerTask extends AsyncTask<Integer, String, Void>
+	public class ConnectionTask extends AsyncTask<String, String, Void>
 	{
 		private static final String TAG = "ListenerThread";
 
 		private InetAddress address;
-		private DatagramSocket socket;
+		private Socket socket;
 		List<byte[]> messageQueue;
+		private DataInputStream incoming;
+		private DataOutputStream outgoing;
+		private ServerSocket serverSocket;
+		private Socket client;
 
 		@Override
-		protected Void doInBackground(Integer... addressEnd)
+		protected Void doInBackground(String... addressString)
 		{
 			Log.d(TAG, "Running");
 			
@@ -265,9 +269,10 @@ public class WiFiStation extends Activity
 			messageQueue = new ArrayList<byte[]>();
 			try
 			{
-				String addressString = "127.0.0.1";// + addressEnd;
-				address = InetAddress.getByName(addressString);
-				socket = new DatagramSocket(5000, address);
+				//address = InetAddress.getByName(addressString);
+				ServerSocket serverSocket = new ServerSocket(5000);
+				Socket client = serverSocket.accept();
+				incoming = new DataInputStream(client.getInputStream());
 			}
 			catch (UnknownHostException e)
 			{
@@ -276,13 +281,15 @@ public class WiFiStation extends Activity
 			catch (SocketException e)
 			{
 				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 			Log.d(TAG, "Listener started");		
 			
 
 			//TODO: Needs a more robustly defined packet size
 			byte[] data = new byte[50000];
-			DatagramPacket packet = new DatagramPacket(data, data.length);
 
 			/*
 			 * Until interrupted by the user, listens for new data at the specified address
@@ -303,8 +310,9 @@ public class WiFiStation extends Activity
 				try
 				{
 					Log.d(TAG, "Writing data to track");
-					socket.receive(packet);
-					if(!handleMessage(data))
+					incoming.read(data, 0, data.length);
+					
+					if(WiFiMessage.readTag(data) != 0xB007B007)
 					{
 						oTrack.write(data, 0, data.length);
 					}
@@ -316,7 +324,16 @@ public class WiFiStation extends Activity
 			}
 			oTrack.stop();
 			oTrack.release();
-			socket.close();
+			try
+			{
+				incoming.close();
+				socket.close();
+				serverSocket.close();
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
 			messageQueue.clear();
 			return null;
 		}
@@ -328,14 +345,14 @@ public class WiFiStation extends Activity
 			addSong(values[0], values[1], values[2]);
 		}
 		
-		private boolean handleMessage(byte[] messageData)
+		private void handleMessage(byte[] messageData)
 		{
 			byte[] tag = new byte[4];
-			System.arraycopy(messageData, 0, tag, 0, 4);
+			System.arraycopy(messageData, 0, tag, 0, 8);
 			if(WiFiMessage.byteArrayToInt(tag) != 0xB007B007)
 			{
 				Log.e(TAG, "Incorrect tag");
-				return false;
+				return;
 			}
 			byte type = messageData[4];
 			if(type == 0)
@@ -347,16 +364,13 @@ public class WiFiStation extends Activity
 				String values[] = {name, artist, user};
 				
 				publishProgress(values);
-				return true;
 			}
 			else if(type == 1)
 			{
-				return false;
-			}
-			else
-			{
-				return false;
+				//Audio data
 			}
 		}
 	}
+
+	
 }
