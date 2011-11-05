@@ -39,7 +39,7 @@ public class WiFiStation extends Activity
 	String stationName;
 	int stationAddress, stationPort;
 	ListenerTask listener;
-	BroadcastTask broadcast;
+	BroadcastThread broadcast;
 	
 	private SongListAdapter playQueueAdapter;
 	
@@ -67,7 +67,7 @@ public class WiFiStation extends Activity
 		
 		listener = new ListenerTask();
 		listener.execute(stationAddress);
-		broadcast = new BroadcastTask();
+		broadcast = new BroadcastThread();
 		broadcast.start();
 	}
 	

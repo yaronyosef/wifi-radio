@@ -14,7 +14,7 @@ import android.util.Log;
  * @author Patrick Theisen
  *
  */
-public class BroadcastTask extends Thread
+public class BroadcastThread extends Thread
 {
 
 	private final static String TAG = "BroadcastTask";
@@ -25,15 +25,22 @@ public class BroadcastTask extends Thread
 	public void run()
 	{
 		super.run();
+		/*
+		 * TODO: Find the IP address programmatically instead of hardcoding it.
+		 */
 		String addressString = "141.212.59.40";
+		/*
+		 * Initializes the queue of messages to be sent
+		 * If the messages are sent immediately it floods the network, and many of them are dropped
+		 */
 		packetQueue = new LinkedList<DatagramPacket>();
 		
 		DatagramSocket socket = null;
 		try
 		{
 			/*
-			 * Creates a new Datagram Socket and sends arbitrary data to the address
-			 * at port 5000
+			 * Creates a new Datagram Socket and resolves the destination address
+			 * for the packets.
 			 */
 			address = InetAddress.getByName(addressString);
 			Log.d(TAG, address.toString());
@@ -47,10 +54,18 @@ public class BroadcastTask extends Thread
 		{
 			e.printStackTrace();
 		}
-		
+		/*
+		 * Loop until the user intentionally interrupts this thread
+		 */
 		while(!isInterrupted())
 		{
+			/*
+			 * Get the first packet from the queue if it exists
+			 */
 			DatagramPacket packet = packetQueue.poll();
+			/*
+			 * If a packet was successfully grabbed from the queue, send it via socket
+			 */
 			if(packet != null)
 			{
 				try
@@ -65,6 +80,9 @@ public class BroadcastTask extends Thread
 			}
 			try
 			{
+				/*
+				 * Sleep for 250ms before sending the next message to avoid flooding the network
+				 */
 				Thread.sleep(250);
 			}
 			catch (InterruptedException e)
@@ -76,16 +94,16 @@ public class BroadcastTask extends Thread
 		socket.close();
 	}
 	
+	/*
+	 * Adds another message to the queue.
+	 */
 	public void addToQueue(byte[] data)
 	{
+		/*
+		 * Builds a new DatagramPacket from the byte data
+		 */
 		DatagramPacket packet = new DatagramPacket(data, data.length, address, 5000);
-		if(packetQueue == null)
-		{
-			Log.d(TAG, "Why is the queue null?");
-			packetQueue = new LinkedList<DatagramPacket>();
-		}
 		packetQueue.add(packet);
-		Log.d(TAG, "Packet added");
 	}
 
 }
