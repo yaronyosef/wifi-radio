@@ -123,6 +123,7 @@ android:layout_height="match_parent">
 		android:textColor="#FFDDDDDD"
 		android:background="@drawable/footer_gradient_selector"
 		android:clickable="true"
+		android:onClick="sendAudioMessage"
 		/>
 		
 		<TextView
@@ -154,6 +155,7 @@ android:layout_height="match_parent">
 		android:textColor="#FFDDDDDD"
 		android:background="@drawable/footer_gradient_selector"
 		android:clickable="true"
+		android:onClick="sendAddSongMessage"
 		/>
 		
 		<TextView
